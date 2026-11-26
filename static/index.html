@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StoryVideo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      min-height: 100vh;
+      background: #101018;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: 35px auto;
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #aaa;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      margin: 20px 0 9px;
+      font-weight: bold;
+    }
+
+    textarea, select {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #383846;
+      border-radius: 12px;
+      background: #1c1c28;
+      color: white;
+      font-size: 16px;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 25px;
+      padding: 17px;
+      border: 0;
+      border-radius: 12px;
+      background: #7957ff;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    #status {
+      margin-top: 20px;
+      color: #c7baff;
+      line-height: 1.5;
+    }
+
+    .note {
+      color: #888;
+      font-size: 13px;
+      margin-top: 22px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>StoryVideo</h1>
+    <p class="subtitle">
+      Turn your story or idea into a narrated video with changing images.
+    </p>
+
+    <label for="story">Your story or prompt</label>
+    <textarea id="story" placeholder="Write your story here, or describe the video you want to create..."></textarea>
+
+    <label for="length">Video length</label>
+    <select id="length">
+      <option value="1">1 minute</option>
+      <option value="3">3 minutes</option>
+      <option value="5">5 minutes</option>
+      <option value="10">10 minutes</option>
+    </select>
+
+    <label for="style">Image style</label>
+    <select id="style">
+      <option value="cartoon">Cartoon story</option>
+      <option value="realistic">Realistic</option>
+      <option value="storybook">Illustrated storybook</option>
+    </select>
+
+    <button id="create">Create my video</button>
+
+    <p id="status"></p>
+
+    <p class="note">
+      Still images only. No character movement and no subtitles.
+      Your story will be narrated with voice-over.
+    </p>
+  </main>
+
+  <script>
+    const createButton = document.getElementById("create");
+    const status = document.getElementById("status");
+
+    createButton.addEventListener("click", async () => {
+      const story = document.getElementById("story").value.trim();
+      const length = document.getElementById("length").value;
+      const style = document.getElementById("style").value;
+
+      if (!story) {
+        status.textContent = "Please enter a story or prompt first.";
+        return;
+      }
+
+      createButton.disabled = true;
+      status.textContent = "Preparing your story...";
+
+      try {
+        const response = await fetch("/api/plan", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            story: story,
+            length_minutes: Number(length),
+            image_style: style
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Something went wrong.");
+        }
+
+        status.textContent = data.message || "Your story plan is ready.";
+      } catch (error) {
+        status.textContent = error.message;
+      } finally {
+        createButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
